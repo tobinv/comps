@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Clinical Comps</title>
+<meta name="description" content="ARRT radiography clinical competency tracker">
+<meta name="theme-color" content="#0d6e72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Comps">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* Layout: sticky progress header over one compact table grouped by ARRT section, phone-first */
+:root{
+  --bg:#f3f5f6; --surface:#ffffff; --fg:#17242a; --muted:#5d6d74; --line:#d9e0e3;
+  --accent:#0d6e72; --accent-soft:#dcefef; --done-row:#eef7f6; --warn:#a15c07; --warn-soft:#fbefdc;
+  --section:#e6ebed;
+  --f-display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,"Roboto Mono",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1719; --surface:#162125; --fg:#e3eaec; --muted:#93a4ab; --line:#2a3a3f;
+  --accent:#4cc2c4; --accent-soft:#173b3d; --done-row:#132d2f; --warn:#e7a54b; --warn-soft:#3a2a14;
+  --section:#1d2b30; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1719; --surface:#162125; --fg:#e3eaec; --muted:#93a4ab; --line:#2a3a3f;
+  --accent:#4cc2c4; --accent-soft:#173b3d; --done-row:#132d2f; --warn:#e7a54b; --warn-soft:#3a2a14;
+  --section:#1d2b30; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.35;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-inline:max(12px,env(safe-area-inset-left));padding-block:0 calc(32px + env(safe-area-inset-bottom))}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:calc(12px + env(safe-area-inset-top,0px)) 10px;border-bottom:1px solid var(--line);margin-inline:-12px;padding-inline:12px}
+.title-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.55rem;letter-spacing:.01em;margin:0;line-height:1}
+.save{font-size:.72rem;color:var(--muted);text-align:right}
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.meter{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.meter .lab{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.meter .num{font-family:var(--f-display);font-weight:700;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.meter .num small{font-size:.95rem;color:var(--muted);font-weight:600}
+.bar{height:5px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.rules{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:.75rem;padding:3px 8px;border-radius:99px;background:var(--warn-soft);color:var(--warn);font-weight:600}
+.chip.ok{background:var(--accent-soft);color:var(--accent)}
+.filters{display:flex;gap:6px;margin-top:10px}
+.filters button{flex:1;font:600 .82rem var(--f-body);padding:7px 0;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+table{width:100%;border-collapse:collapse;margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;table-layout:fixed}
+thead th{font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
+th.c,td.c{width:44px;text-align:center}
+thead th.c{padding-inline:0;font-size:.6rem;letter-spacing:.03em}
+th.d,td.d{width:118px}
+tr.sec td{background:var(--section);font-family:var(--f-display);font-weight:700;font-size:1.02rem;letter-spacing:.02em;padding:6px 8px}
+tr.sec .note{display:block;font-family:var(--f-body);font-weight:400;font-size:.72rem;color:var(--muted);letter-spacing:0}
+tbody tr.p td{border-top:1px solid var(--line);padding:7px 6px;vertical-align:middle}
+tbody tr.p td:first-child{padding-left:8px}
+tr.p.done td{background:var(--done-row)}
+.name{font-size:.92rem}
+.name .sub{display:block;font-size:.72rem;color:var(--muted)}
+.ck{color:var(--accent);font-weight:700}
+.datebox{position:relative;display:flex;align-items:center;gap:4px}
+.dbtn{flex:1;min-width:0;position:relative;height:30px;border-radius:6px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font:500 .76rem var(--f-mono);color:var(--muted);background:transparent}
+.done .dbtn{border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft)}
+.dbtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;font-size:16px}
+.dbtn:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.clr{width:22px;height:22px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:1rem;line-height:1;cursor:pointer;flex:none}
+.clr:focus-visible{outline:2px solid var(--accent)}
+.foot{font-size:.74rem;color:var(--muted);margin-top:12px;display:grid;gap:4px}
+.empty{padding:14px 8px;color:var(--muted);font-size:.85rem;text-align:center}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.backup{display:flex;gap:8px;margin-top:16px}
+.backup button,.backup label{flex:1;text-align:center;font:600 .85rem var(--f-body);padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.backup input{display:none}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;z-index:20}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title-row">
+      <h1>Clinical Comps</h1>
+      <div class="save" id="save">Loading…</div>
+    </div>
+    <div class="meters">
+      <div class="meter"><div class="lab">Mandatory</div><div class="num"><span id="mNum">0</span> <small>/ 35</small></div><div class="bar"><i id="mBar"></i></div></div>
+      <div class="meter"><div class="lab">Elective</div><div class="num"><span id="eNum">0</span> <small>/ 17</small></div><div class="bar"><i id="eBar"></i></div></div>
+    </div>
+    <div class="rules">
+      <span class="chip" id="headChip">Head elective 0/1</span>
+      <span class="chip" id="fluoroChip">Fluoro 0/2</span>
+    </div>
+    <div class="filters" role="group" aria-label="Show">
+      <button id="fAll" aria-pressed="true" data-f="all">All</button>
+      <button id="fTodo" aria-pressed="false" data-f="todo">Remaining</button>
+      <button id="fDone" aria-pressed="false" data-f="done">Done</button>
+    </div>
+  </header>
+
+  <table>
+    <thead><tr><th>Imaging procedure</th><th class="c">Mand</th><th class="c">Elec</th><th class="d">Date completed</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="backup">
+    <button id="exportBtn" type="button">Back up</button>
+    <label for="importFile">Restore<input type="file" id="importFile" accept="application/json,.json"></label>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+
+  <div class="foot">
+    <div>Your dates are stored only on this phone. Tap Back up now and then and keep the file somewhere safe.</div>
+    <div>** Trauma requires modifications in positioning, tube angle, or detector placement due to injury, with monitoring of the patient's condition.</div>
+    <div>*** Fluoroscopy studies can be done in a fluoroscopy room or with a C-arm. They don't count toward the mobile C-arm studies.</div>
+    <div>Source: ARRT Radiography Didactic and Clinical Competency Requirements, 4.2.2 (effective March 1, 2027).</div>
+  </div>
+</div>
+
+<script>
+
+const M="m",E="e";
+const DATA=[
+ ["Chest and Thorax",null,[
+  ["chest-routine","Chest Routine",M],["chest-ap","Chest AP","(Wheelchair or Stretcher)",M],["ribs","Ribs",M],
+  ["chest-decub","Chest Lateral Decubitus",E],["sternum","Sternum",E],["upper-airway","Upper Airway","(Soft-Tissue Neck)",E],
+  ["sc-joints","Sternoclavicular Joints",E],["clavicle","Clavicle",M]]],
+ ["Upper Extremity",null,[
+  ["thumb-finger","Thumb or Finger",M],["hand","Hand",M],["wrist","Wrist",M],["forearm","Forearm",M],["elbow","Elbow",M],
+  ["humerus","Humerus",M],["shoulder","Shoulder",M],["scapula","Scapula",E],["ac-joints","AC Joints",E],
+  ["trauma-shoulder","Trauma: Shoulder or Humerus**","(e.g., Scapular Y, Transthoracic or Axial)",M],
+  ["trauma-ue","Trauma: Upper Extremity (Non-Shoulder)**",M]]],
+ ["Lower Extremity",null,[
+  ["toes","Toes",E],["foot","Foot",M],["ankle","Ankle",M],["knee","Knee",M],["tib-fib","Tibia-Fibula",M],["femur","Femur",M],
+  ["patella","Patella",E],["calcaneus","Calcaneus",E],["trauma-le","Trauma: Lower Extremity**",M]]],
+ ["Head","Select at least one elective from this section.",[
+  ["skull","Skull",E],["facial","Facial Bones",E],["mandible","Mandible",E],["tmj","Temporomandibular Joints",E],
+  ["nasal","Nasal Bones",E],["orbits","Orbits",E],["sinuses","Paranasal Sinuses",E]]],
+ ["Spine and Pelvis",null,[
+  ["c-spine","Cervical Spine",M],["t-spine","Thoracic Spine",M],["tl-spine","Thoracolumbar Spine",E],["l-spine","Lumbar Spine",M],
+  ["xt-spine","Cross-Table Lateral Spine","(Horizontal Beam, Patient Recumbent)",E],["pelvis","Pelvis",M],["hip","Hip",M],
+  ["xt-hip","Cross-Table Lateral Hip","(Horizontal Beam, Patient Recumbent)",M],["sacrum","Sacrum and/or Coccyx",E],
+  ["scoliosis","Scoliosis Series",E],["si-joints","Sacroiliac Joints",E]]],
+ ["Abdomen",null,[
+  ["abd-supine","Abdomen Supine",M],["abd-upright","Abdomen Upright",M],["abd-decub","Abdomen Decubitus",E],
+  ["ng-tube","Nasogastric/Enteric or Orogastric/Enteric Tube","(e.g., Dobhoff)",E]]],
+ ["Fluoroscopy Studies***","Select two procedures from this section; perform per site protocol.",[
+  ["ugi","Upper GI Series, Single or Double Contrast",E],["enema","Contrast Enema, Single or Double Contrast",E],
+  ["sbs","Small Bowel Series",E],["esophagus","Esophagus","(NOT Swallowing Dysfunction Study)",E],
+  ["cysto","Cystography/Cystourethrography",E],["ercp","ERCP",E],["myelo","Myelography / Lumbar Puncture / Epidural Injections",E],
+  ["arthro","Arthrography / Joint Injection / Aspiration",E],["hsg","Hysterosalpingography",E]]],
+ ["Mobile C-Arm Studies","e.g., proper tilt, optimal exposure factors, accurate beam centering",[
+  ["carm","C-Arm Procedure","(Manipulation to obtain more than one projection)",M],
+  ["carm-surg","Surgical C-Arm Procedure","(Manipulation around a sterile field)",M]]],
+ ["Mobile Radiographic Studies",null,[
+  ["mob-chest","Chest",M],["mob-abd","Abdomen",M],["mob-ext","Upper or Lower Extremity",M]]],
+ ["Pediatric Patient","Age 6 years or younger",[
+  ["ped-chest","Chest Routine",E],["ped-ext","Upper or Lower Extremity",E],["ped-abd","Abdomen",E],["ped-mobile","Mobile Study",E]]],
+ ["Geriatric Patient","At least 65 years old and physically or cognitively impaired as a result of aging",[
+  ["ger-chest","Chest Routine",M],["ger-ext","Upper or Lower Extremity",M],["ger-hip-spine","Hip or Spine",M]]]
+];
+// normalise rows to {id,name,sub,type,sec}
+const PROCS=[];
+DATA.forEach(([sec,,items])=>items.forEach(it=>{
+  const [id,name,a,b]=it; const sub=b?a:null; const type=b||a;
+  PROCS.push({id,name,sub,type,sec});
+}));
+
+let dates={};             // id -> "YYYY-MM-DD"
+let filter="all";
+const LS="arrt-comps-v1";
+const $=s=>document.getElementById(s);
+
+function lsRead(){try{return JSON.parse(localStorage.getItem(LS)||"{}")||{}}catch(e){return {}}}
+function lsWrite(){try{localStorage.setItem(LS,JSON.stringify(dates))}catch(e){}}
+
+function fmt(iso){
+  if(!iso)return "Add date";
+  const [y,m,d]=iso.split("-");return `${m}/${d}/${y.slice(2)}`;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function render(){
+  const out=[];
+  DATA.forEach(([sec,note,items])=>{
+    const rows=PROCS.filter(p=>p.sec===sec).filter(p=>filter==="all"||(filter==="done")===!!dates[p.id]);
+    if(!rows.length)return;
+    out.push(`<tr class="sec"><td colspan="4">${esc(sec)}${note?`<span class="note">${esc(note)}</span>`:""}</td></tr>`);
+    rows.forEach(p=>{
+      const d=dates[p.id];
+      out.push(`<tr class="p${d?" done":""}">
+        <td><span class="name">${esc(p.name)}${p.sub?`<span class="sub">${esc(p.sub)}</span>`:""}</span></td>
+        <td class="c">${p.type===M?'<span class="ck" aria-label="Mandatory">✓</span>':""}</td>
+        <td class="c">${p.type===E?'<span class="ck" aria-label="Elective">✓</span>':""}</td>
+        <td class="d"><div class="datebox">
+          <label class="dbtn"><span>${fmt(d)}</span><input type="date" id="d-${p.id}" data-id="${p.id}" value="${d||""}" aria-label="Date completed for ${esc(p.name)}"></label>
+          ${d?`<button class="clr" data-clear="${p.id}" aria-label="Clear date for ${esc(p.name)}">×</button>`:""}
+        </div></td></tr>`);
+    });
+  });
+  $("rows").innerHTML=out.join("")||`<tr><td colspan="4" class="empty">${filter==="done"?"No comps logged yet. Tap “Add date” on a procedure when you comp out.":"Every procedure has a date. Nice work."}</td></tr>`;
+  summary();
+}
+
+function summary(){
+  const done=p=>!!dates[p.id];
+  const m=PROCS.filter(p=>p.type===M&&done(p)).length;
+  const e=PROCS.filter(p=>p.type===E&&done(p)).length;
+  const head=PROCS.filter(p=>p.sec==="Head"&&done(p)).length;
+  const fl=PROCS.filter(p=>p.sec.startsWith("Fluoro")&&done(p)).length;
+  $("mNum").textContent=m;$("eNum").textContent=e;
+  $("mBar").style.width=Math.min(100,m/35*100)+"%";
+  $("eBar").style.width=Math.min(100,e/17*100)+"%";
+  const hc=$("headChip"),fc=$("fluoroChip");
+  hc.textContent=`Head elective ${Math.min(head,1)}/1`;hc.classList.toggle("ok",head>=1);
+  fc.textContent=`Fluoro ${Math.min(fl,2)}/2`;fc.classList.toggle("ok",fl>=2);
+}
+
+function save(){lsWrite();$("save").textContent="Saved on this phone"}
+
+function setDate(id,val){
+  if(val)dates[id]=val;else delete dates[id];
+  render();save();
+}
+
+$("rows").addEventListener("change",e=>{const i=e.target.closest("input[data-id]");if(i)setDate(i.dataset.id,i.value)});
+$("rows").addEventListener("click",e=>{
+  const c=e.target.closest("[data-clear]");if(c){setDate(c.dataset.clear,"");return}
+  const i=e.target.closest("input[type=date]");if(i&&i.showPicker){try{i.showPicker()}catch(_){}}
+});
+document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{
+  filter=b.dataset.f;document.querySelectorAll(".filters button").forEach(x=>x.setAttribute("aria-pressed",x===b));render();
+}));
+
+
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2500)}
+
+$("exportBtn").addEventListener("click",async()=>{
+  const n=Object.keys(dates).length;
+  const json=JSON.stringify({app:"arrt-comps",version:1,exported:new Date().toISOString(),dates},null,2);
+  const name="comps-backup-"+new Date().toISOString().slice(0,10)+".json";
+  const file=new File([json],name,{type:"application/json"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Comp backup"});return}
+  }catch(e){if(e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+  toast("Backup saved ("+n+" comps)");
+});
+
+$("importFile").addEventListener("change",async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{
+    const obj=JSON.parse(await f.text());const d=obj&&obj.dates;
+    if(!d||typeof d!=="object")throw 0;
+    const valid=new Set(PROCS.map(p=>p.id));const clean={};
+    for(const[k,v] of Object.entries(d))if(valid.has(k)&&/^\d{4}-\d{2}-\d{2}$/.test(v))clean[k]=v;
+    dates=clean;save();render();toast("Restored "+Object.keys(clean).length+" comps");
+  }catch(_){toast("That file isn't a comp backup")}
+});
+
+dates=lsRead();render();
+$("save").textContent=Object.keys(dates).length?"Saved on this phone":"Not started yet";
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
+</script>
+</body>
+</html>
